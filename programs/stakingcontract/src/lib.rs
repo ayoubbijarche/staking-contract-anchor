@@ -111,7 +111,6 @@ pub struct Initialize<'info> {
         space = 8 + PoolInfo::LEN
     )]
     pub pool_info: Account<'info, PoolInfo>,
-    /// CHECK: This is the token mint
     #[account(mut)]
     pub staking_token: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
@@ -121,7 +120,6 @@ pub struct Initialize<'info> {
 pub struct Stake<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
-    /// CHECK: This is the admin account
     #[account(mut)]
     pub admin: UncheckedAccount<'info>,
     #[account(
@@ -130,13 +128,10 @@ pub struct Stake<'info> {
         space = 8 + UserInfo::LEN
     )]
     pub user_info: Account<'info, UserInfo>,
-    /// CHECK: This is the user's token account
     #[account(mut)]
     pub user_staking_wallet: UncheckedAccount<'info>,
-    /// CHECK: This is the admin's token account
     #[account(mut)]
     pub admin_staking_wallet: UncheckedAccount<'info>,
-    /// CHECK: This is the token mint
     #[account(mut)]
     pub staking_token: UncheckedAccount<'info>,
     pub token_program: Program<'info, Token>,
@@ -145,21 +140,16 @@ pub struct Stake<'info> {
 
 #[derive(Accounts)]
 pub struct Unstake<'info> {
-    /// CHECK: This is the user account
     #[account(mut)]
     pub user: UncheckedAccount<'info>,
-    /// CHECK: This is the admin account
     #[account(mut)]
     pub admin: UncheckedAccount<'info>,
     #[account(mut)]
     pub user_info: Account<'info, UserInfo>,
-    /// CHECK: This is the user's token account
     #[account(mut)]
     pub user_staking_wallet: UncheckedAccount<'info>,
-    /// CHECK: This is the admin's token account
     #[account(mut)]
     pub admin_staking_wallet: UncheckedAccount<'info>,
-    /// CHECK: This is the token mint
     #[account(mut)]
     pub staking_token: UncheckedAccount<'info>,
     pub token_program: Program<'info, Token>,
@@ -167,21 +157,16 @@ pub struct Unstake<'info> {
 
 #[derive(Accounts)]
 pub struct Claimreward<'info> {
-    /// CHECK: This is the user account
     #[account(mut)]
     pub user: UncheckedAccount<'info>,
-    /// CHECK: This is the admin account
     #[account(mut)]
     pub admin: UncheckedAccount<'info>,
     #[account(mut)]
     pub user_info: Account<'info, UserInfo>,
-    /// CHECK: This is the user's token account
     #[account(mut)]
     pub user_staking_wallet: UncheckedAccount<'info>,
-    /// CHECK: This is the admin's token account
     #[account(mut)]
     pub admin_staking_wallet: UncheckedAccount<'info>,
-    /// CHECK: This is the token mint
     #[account(mut)]
     pub staking_token: UncheckedAccount<'info>,
     pub token_program: Program<'info, Token>,
