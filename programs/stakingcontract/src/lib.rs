@@ -1,17 +1,13 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, MintTo, Transfer};
-use anchor_spl::token_interface::{Mint , TokenAccount , TokenInterface};
-
-
+use anchor_spl::token::{self, Mint, Token, TokenAccount, MintTo, Transfer};
 
 declare_id!("8xHxL2EX8StDf1VQbNQRt4D7UvNPtBfn8nnPND7ZvVzd");
 
 #[program]
-pub mod stakingcontract {
-
+mod stakingcontract {
     use super::*;
 
-    pub fn initialize(ctx : Context<Initialize> , start_slot : u64 , end_slot : u64) -> Result<()> {
+    pub fn initialize(ctx: Context<Initialize>, start_slot: u64, end_slot: u64) -> Result<()> {
         let poolinfo = &mut ctx.accounts.pool_info;
         poolinfo.admin = ctx.accounts.admin.key();
         poolinfo.start_slot = start_slot;
@@ -20,16 +16,16 @@ pub mod stakingcontract {
         Ok(())
     }
 
-    pub fn stake(ctx : Context<Stake> , amount : u64) -> Result<()>{
+    pub fn stake(ctx: Context<Stake>, amount: u64) -> Result<()> {
         let userinfo = &mut ctx.accounts.user_info;
         let clock = Clock::get()?;
         
         if userinfo.amount > 0 {
             let reward = (clock.slot - userinfo.deposit_slot) - userinfo.debt_reward;
-            let cpi_accounts = MintTo{
+            let cpi_accounts = MintTo {
                 mint: ctx.accounts.staking_token.to_account_info(),
-                to : ctx.accounts.user_staking_wallet.to_account_info(),
-                authority : ctx.accounts.admin_staking_wallet.to_account_info(),
+                to: ctx.accounts.user_staking_wallet.to_account_info(),
+                authority: ctx.accounts.admin_staking_wallet.to_account_info(),
             };
 
             let cpi_program = ctx.accounts.token_program.to_account_info();
@@ -37,10 +33,10 @@ pub mod stakingcontract {
             token::mint_to(cpi_ctx, reward)?;
         }
 
-        let cpi_accounts = Transfer{
-            from : ctx.accounts.user_staking_wallet.to_account_info(),
-            to : ctx.accounts.admin_staking_wallet.to_account_info(),
-            authority : ctx.accounts.user.to_account_info()
+        let cpi_accounts = Transfer {
+            from: ctx.accounts.user_staking_wallet.to_account_info(),
+            to: ctx.accounts.admin_staking_wallet.to_account_info(),
+            authority: ctx.accounts.user.to_account_info()
         };
         
         let cpi_program = ctx.accounts.token_program.to_account_info();
@@ -52,29 +48,29 @@ pub mod stakingcontract {
         Ok(())
     }
 
-    pub fn unstake(ctx : Context<Unstake>) -> Result<()>{
+    pub fn unstake(ctx: Context<Unstake>) -> Result<()> {
         let userinfo = &mut ctx.accounts.user_info;
         let clock = Clock::get()?;
         let reward = (clock.slot - userinfo.deposit_slot) - userinfo.debt_reward;
 
-        let cpi_accounts = MintTo{
-            mint : ctx.accounts.staking_token.to_account_info(),
-            to : ctx.accounts.user_staking_wallet.to_account_info(),
-            authority : ctx.accounts.admin_staking_wallet.to_account_info()
+        let cpi_accounts = MintTo {
+            mint: ctx.accounts.staking_token.to_account_info(),
+            to: ctx.accounts.user_staking_wallet.to_account_info(),
+            authority: ctx.accounts.admin_staking_wallet.to_account_info()
         };
 
         let cpi_program = ctx.accounts.token_program.to_account_info();
         let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
         token::mint_to(cpi_ctx, reward)?;
         
-        let cpi_accounts = Transfer{
-            from : ctx.accounts.admin_staking_wallet.to_account_info(),
-            to : ctx.accounts.user_staking_wallet.to_account_info(),
-            authority : ctx.accounts.admin.to_account_info(),
+        let cpi_accounts = Transfer {
+            from: ctx.accounts.admin_staking_wallet.to_account_info(),
+            to: ctx.accounts.user_staking_wallet.to_account_info(),
+            authority: ctx.accounts.admin.to_account_info(),
         };
         
         let cpi_program = ctx.accounts.token_program.to_account_info();
-        let cpi_ctx = CpiContext::new(cpi_program , cpi_accounts);
+        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
         token::transfer(cpi_ctx, userinfo.amount)?;
 
         userinfo.amount = 0;
@@ -88,10 +84,10 @@ pub mod stakingcontract {
         let user_info = &mut ctx.accounts.user_info;
         let clock = Clock::get()?;
         let reward = (clock.slot - user_info.deposit_slot) - user_info.debt_reward;
-        let cpi_accounts = MintTo{
-            mint : ctx.accounts.staking_token.to_account_info(),
-            to : ctx.accounts.user_staking_wallet.to_account_info(),
-            authority : ctx.accounts.admin.to_account_info()
+        let cpi_accounts = MintTo {
+            mint: ctx.accounts.staking_token.to_account_info(),
+            to: ctx.accounts.user_staking_wallet.to_account_info(),
+            authority: ctx.accounts.admin.to_account_info()
         };
         
         let cpi_program = ctx.accounts.token_program.to_account_info();
@@ -103,139 +99,113 @@ pub mod stakingcontract {
 
         Ok(())
     }
-
-
 }
 
 #[derive(Accounts)]
-pub struct Initialize<'info>{
+pub struct Initialize<'info> {
     #[account(mut)]
-    pub admin : Signer<'info>,
+    pub admin: Signer<'info>,
     #[account(
-      init,
-      payer = admin,
-      space = 8 + PoolInfo::LEN
+        init,
+        payer = admin,
+        space = 8 + PoolInfo::LEN
     )]
-    pub pool_info : Account<'info , PoolInfo>,
+    pub pool_info: Account<'info, PoolInfo>,
+    /// CHECK: This is the token mint
     #[account(mut)]
-    pub staking_token : InterfaceAccount<'info , Mint>,
-    pub system_program : Program<'info , System>,
+    pub staking_token: UncheckedAccount<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
-pub struct Stake<'info>{
+pub struct Stake<'info> {
     #[account(mut)]
-    pub user : Signer<'info>,
+    pub user: Signer<'info>,
+    /// CHECK: This is the admin account
     #[account(mut)]
-    pub admin : AccountInfo<'info>,
+    pub admin: UncheckedAccount<'info>,
     #[account(
         init,
         payer = user,
         space = 8 + UserInfo::LEN
     )]
-    pub user_info : Account<'info , UserInfo>,
-
+    pub user_info: Account<'info, UserInfo>,
+    /// CHECK: This is the user's token account
     #[account(mut)]
-    pub user_staking_wallet : InterfaceAccount<'info , TokenAccount>,
-
+    pub user_staking_wallet: UncheckedAccount<'info>,
+    /// CHECK: This is the admin's token account
     #[account(mut)]
-    pub admin_staking_wallet : InterfaceAccount<'info , TokenAccount>,
-    
+    pub admin_staking_wallet: UncheckedAccount<'info>,
+    /// CHECK: This is the token mint
     #[account(mut)]
-    pub staking_token : InterfaceAccount<'info , Mint>,
-    pub token_program : Interface<'info , TokenInterface>,
-    pub system_program : Program<'info , System>
+    pub staking_token: UncheckedAccount<'info>,
+    pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>
 }
 
 #[derive(Accounts)]
-pub struct Unstake<'info>{
+pub struct Unstake<'info> {
+    /// CHECK: This is the user account
     #[account(mut)]
-    pub user : AccountInfo<'info>,
+    pub user: UncheckedAccount<'info>,
+    /// CHECK: This is the admin account
     #[account(mut)]
-    pub admin : AccountInfo<'info>,
+    pub admin: UncheckedAccount<'info>,
     #[account(mut)]
-    pub user_info : Account<'info , UserInfo>,
+    pub user_info: Account<'info, UserInfo>,
+    /// CHECK: This is the user's token account
     #[account(mut)]
-    pub user_staking_wallet : InterfaceAccount<'info , TokenAccount>,
+    pub user_staking_wallet: UncheckedAccount<'info>,
+    /// CHECK: This is the admin's token account
     #[account(mut)]
-    pub admin_staking_wallet : InterfaceAccount<'info , TokenAccount>,
+    pub admin_staking_wallet: UncheckedAccount<'info>,
+    /// CHECK: This is the token mint
     #[account(mut)]
-    pub staking_token : InterfaceAccount<'info , Mint>,
-    pub token_program : Interface<'info , TokenInterface>,
+    pub staking_token: UncheckedAccount<'info>,
+    pub token_program: Program<'info, Token>,
 }
 
 #[derive(Accounts)]
-pub struct Claimreward<'info>{
+pub struct Claimreward<'info> {
+    /// CHECK: This is the user account
     #[account(mut)]
-    pub user : AccountInfo<'info>,
+    pub user: UncheckedAccount<'info>,
+    /// CHECK: This is the admin account
     #[account(mut)]
-    pub admin : AccountInfo<'info>,
+    pub admin: UncheckedAccount<'info>,
     #[account(mut)]
-    pub user_info : Account<'info , UserInfo>,
+    pub user_info: Account<'info, UserInfo>,
+    /// CHECK: This is the user's token account
     #[account(mut)]
-    pub user_staking_wallet : InterfaceAccount<'info , TokenAccount>,
+    pub user_staking_wallet: UncheckedAccount<'info>,
+    /// CHECK: This is the admin's token account
     #[account(mut)]
-    pub admin_staking_wallet : InterfaceAccount<'info , TokenAccount>,
+    pub admin_staking_wallet: UncheckedAccount<'info>,
+    /// CHECK: This is the token mint
     #[account(mut)]
-    pub staking_token : InterfaceAccount<'info , Mint>,
-    pub token_program : Interface<'info , TokenInterface>,
+    pub staking_token: UncheckedAccount<'info>,
+    pub token_program: Program<'info, Token>,
 }
-
-
-
-
 
 #[account]
-pub struct PoolInfo{
-    pub admin : Pubkey,
-    pub start_slot : u64,
-    pub end_slot : u64,
-    pub token : Pubkey
+pub struct PoolInfo {
+    pub admin: Pubkey,
+    pub start_slot: u64,
+    pub end_slot: u64,
+    pub token: Pubkey
 }
-
 
 #[account]
-pub struct UserInfo{
-    pub amount : u64,
-    pub debt_reward : u64,
-    pub deposit_slot : u64
+pub struct UserInfo {
+    pub amount: u64,
+    pub debt_reward: u64,
+    pub deposit_slot: u64
 }
 
-impl PoolInfo{
-  pub const LEN: usize = 32 + 8 + 8 + 32;
+impl PoolInfo {
+    pub const LEN: usize = 32 + 8 + 8 + 32;
 }
 
 impl UserInfo {
-  pub const LEN: usize = 8 + 8 + 8;
+    pub const LEN: usize = 8 + 8 + 8;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
