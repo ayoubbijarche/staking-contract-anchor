@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Mint, Token, TokenAccount, MintTo, Transfer};
+use anchor_spl::token::{self , Token,  MintTo, Transfer};
 
 declare_id!("8xHxL2EX8StDf1VQbNQRt4D7UvNPtBfn8nnPND7ZvVzd");
 
@@ -104,6 +104,7 @@ mod stakingcontract {
 #[derive(Accounts)]
 pub struct Initialize<'info> {
     #[account(mut)]
+    /// CHECK: This is not dangerous because we don't read or write from this account
     pub admin: Signer<'info>,
     #[account(
         init,
@@ -112,6 +113,7 @@ pub struct Initialize<'info> {
     )]
     pub pool_info: Account<'info, PoolInfo>,
     #[account(mut)]
+    /// CHECK: This is not dangerous because we don't read or write from this account
     pub staking_token: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
@@ -119,8 +121,10 @@ pub struct Initialize<'info> {
 #[derive(Accounts)]
 pub struct Stake<'info> {
     #[account(mut)]
+    /// CHECK: This is not dangerous because we don't read or write from this account
     pub user: Signer<'info>,
     #[account(mut)]
+    /// CHECK: This is not dangerous because we don't read or write from this account
     pub admin: UncheckedAccount<'info>,
     #[account(
         init,
@@ -129,10 +133,13 @@ pub struct Stake<'info> {
     )]
     pub user_info: Account<'info, UserInfo>,
     #[account(mut)]
+    /// CHECK: This is not dangerous because we don't read or write from this account
     pub user_staking_wallet: UncheckedAccount<'info>,
     #[account(mut)]
+    /// CHECK: This is not dangerous because we don't read or write from this account
     pub admin_staking_wallet: UncheckedAccount<'info>,
     #[account(mut)]
+    /// CHECK: This is not dangerous because we don't read or write from this account
     pub staking_token: UncheckedAccount<'info>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>
@@ -141,39 +148,51 @@ pub struct Stake<'info> {
 #[derive(Accounts)]
 pub struct Unstake<'info> {
     #[account(mut)]
+    /// CHECK: This is not dangerous because we don't read or write from this account
     pub user: UncheckedAccount<'info>,
     #[account(mut)]
+    /// CHECK: This is not dangerous because we don't read or write from this account
     pub admin: UncheckedAccount<'info>,
     #[account(mut)]
     pub user_info: Account<'info, UserInfo>,
     #[account(mut)]
+    /// CHECK: This is not dangerous because we don't read or write from this account
     pub user_staking_wallet: UncheckedAccount<'info>,
     #[account(mut)]
+    /// CHECK: This is not dangerous because we don't read or write from this account
     pub admin_staking_wallet: UncheckedAccount<'info>,
     #[account(mut)]
+    /// CHECK: This is not dangerous because we don't read or write from this account
     pub staking_token: UncheckedAccount<'info>,
     pub token_program: Program<'info, Token>,
+    pub system_program : Program<'info , System>
 }
 
 #[derive(Accounts)]
 pub struct Claimreward<'info> {
     #[account(mut)]
+    /// CHECK: This is not dangerous because we don't read or write from this account
     pub user: UncheckedAccount<'info>,
     #[account(mut)]
+    /// CHECK: This is not dangerous because we don't read or write from this account
     pub admin: UncheckedAccount<'info>,
     #[account(mut)]
     pub user_info: Account<'info, UserInfo>,
     #[account(mut)]
+    /// CHECK: This is not dangerous because we don't read or write from this account
     pub user_staking_wallet: UncheckedAccount<'info>,
     #[account(mut)]
+    /// CHECK: This is not dangerous because we don't read or write from this account
     pub admin_staking_wallet: UncheckedAccount<'info>,
     #[account(mut)]
+    /// CHECK: This is not dangerous because we don't read or write from this account
     pub staking_token: UncheckedAccount<'info>,
     pub token_program: Program<'info, Token>,
 }
 
 #[account]
 pub struct PoolInfo {
+    /// CHECK: This is not dangerous because we don't read or write from this account
     pub admin: Pubkey,
     pub start_slot: u64,
     pub end_slot: u64,
